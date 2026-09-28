@@ -10,7 +10,7 @@ class MLP(nn.Module):
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout()
         self.layer_hidden = nn.Linear(dim_hidden, dim_out)
-        self.log_softmax = nn.LogSoftmax(dim=1).
+        self.log_softmax = nn.LogSoftmax(dim=1)
     def forward(self, x):        
         x = self.layer_input(x)
         x = self.dropout(x)
