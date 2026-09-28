@@ -56,7 +56,7 @@ def FedFM(args, train_dataset, user_groups, user_groups_lt, local_model_list, cl
             summary_writer.add_scalar('Train/Acc/user' + str(idx + 1), acc, round)
             print('Train/Loss/user' + str(idx + 1), loss['total'], round)
             print('Train/Loss1/user' + str(idx + 1), loss['1'], round)
-            # print('Train/Loss2/user' + str(idx + 1), loss['2'], round)
+            print('Train/Loss2/user' + str(idx + 1), loss['2'], round)
             print('Train/Acc/user' + str(idx + 1), acc, round)
             proto_loss += loss['2']
 
