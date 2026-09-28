@@ -149,6 +149,7 @@ class COVID19(data.Dataset):
             
             # Lấy tất cả ảnh png, jpg, jpeg
             image_paths = sorted(glob.glob(os.path.join(class_images_dir, '*.*')))
+            print(len(image_paths))
             valid_exts = ('.png', '.jpg', '.jpeg')
             image_paths = [p for p in image_paths if p.lower().endswith(valid_exts)]
             
