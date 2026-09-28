@@ -32,6 +32,7 @@ class LocalUpdate(object):
         self.device = args.device
         self.criterion = nn.NLLLoss().to(self.device)
         self.contrastive_loss = MultiProtoSupConLoss().to(self.device)
+        self.testloader = DataLoader(val_dataset, batch_size=self.args.local_bs, drop_last=True)
 
     def train_val_test(self, dataset, idxs):
         """
