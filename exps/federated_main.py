@@ -24,7 +24,7 @@ if str(mod_dir) not in sys.path:
 def FedFM(args, train_dataset, user_groups, user_groups_lt, local_model_list, classes_list):
     summary_writer = SummaryWriter('../tensorboard/'+ args.dataset +'_fedproto_' + str(args.ways) + 'w' + str(args.shots) + 's' + str(args.stdev) + 'e_' + str(args.num_users) + 'u_' + str(args.rounds) + 'r')
 
-    protos_path = "global_protos_dict.pt"
+    protos_path = "./global_protos_dict.pt"
     
     if os.path.exists(protos_path):
         # Đọc Dictionary chứa Tensor từ file vào bộ nhớ
