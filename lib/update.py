@@ -39,8 +39,7 @@ class LocalUpdate(object):
         and user indexes.
         """
         idxs_train = idxs[:int(1 * len(idxs))]
-        trainloader = DataLoader(DatasetSplit(dataset, idxs_train),
-                                 batch_size=self.args.local_bs, shuffle=True, drop_last=True)
+        trainloader = DataLoader(dataset, batch_size=self.args.local_bs, shuffle=True, drop_last=True)
 
         return trainloader
 
@@ -103,8 +102,8 @@ class LocalUpdate(object):
 
                 model.zero_grad()
                 log_probs, protos = model.forward(images)
-                loss1 = 3 * self.criterion(log_probs, labels)
-                loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
+                loss1 = self.criterion(log_probs, labels)
+                loss2 = 1/3 * self.contrastive_loss.forward(protos, labels, global_protos)
 
                 loss = loss1 + loss2
                 loss.backward()
