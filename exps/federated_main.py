@@ -122,7 +122,7 @@ if __name__ == '__main__':
     print("k_list")
     print(k_list)
     train_dataset, user_groups, user_groups_lt, classes_list, classes_list_gt = get_dataset(args, n_list, k_list) 
-
+    print(len(train_dataset))
     local_model_list = []
     for i in range(args.num_users):
         args.out_channels = 4
