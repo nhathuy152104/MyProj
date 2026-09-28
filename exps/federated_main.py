@@ -114,7 +114,7 @@ if __name__ == '__main__':
     np.random.seed(args.seed)
     random.seed(args.seed)
 
-    n_list = np.random.randint(max(2, args.ways - args.stdev), min(args.num_classes, args.ways + args.stdev  + 1), args.num_users)
+    n_list = 3
     print("n_list")
     print(n_list)
     if args.dataset == 'covid19':
