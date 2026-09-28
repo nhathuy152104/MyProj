@@ -26,7 +26,7 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, dataset, idxs):
+    def __init__(self, args, dataset, val_dataset, idxs):
         self.args = args
         self.trainloader = self.train_val_test(dataset, list(idxs))
         self.device = args.device
@@ -43,47 +43,7 @@ class LocalUpdate(object):
 
         return trainloader
 
-    def update_weights(self, idx, model, global_round):
-        # Set mode to train model
-        model.train()
-        epoch_loss = []
 
-        # Set optimizer for the local updates
-        if self.args.optimizer == 'sgd':
-            optimizer = torch.optim.SGD(model.parameters(), lr=self.args.lr,
-                                        momentum=0.5)
-        elif self.args.optimizer == 'adam':
-            optimizer = torch.optim.Adam(model.parameters(), lr=self.args.lr,
-                                         weight_decay=1e-4)
-
-        for iter in range(self.args.train_ep):
-            batch_loss = []
-            for batch_idx, (images, labels_g) in enumerate(self.trainloader):
-                images, labels = images.to(self.device), labels_g.to(self.device)
-
-                model.zero_grad()
-                log_probs, protos = model(images)
-                loss = self.criterion(log_probs, labels)
-
-                loss.backward()
-                optimizer.step()
-
-                _, y_hat = log_probs.max(1)
-                acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
-
-                if self.args.verbose and (batch_idx % 10 == 0):
-                    print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f}'.format(
-                        global_round, idx, iter, batch_idx * len(images),
-                        len(self.trainloader.dataset),
-                        100. * batch_idx / len(self.trainloader),
-                        loss.item(),
-                        acc_val.item()))
-                batch_loss.append(loss.item())
-            epoch_loss.append(sum(batch_loss)/len(batch_loss))
-
-
-        return model.state_dict(), sum(epoch_loss) / len(epoch_loss), acc_val.item()
-  
 
     def update_weights_fedfm(self, idx, global_protos, model, global_round):
         model.train()
@@ -128,6 +88,8 @@ class LocalUpdate(object):
             epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
             epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
 
+            val_acc, val_loss = self.inference(model, global_protos)
+            print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
         epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
         epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
         epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
@@ -136,7 +98,7 @@ class LocalUpdate(object):
 
                 
                 
-    def inference(self, model):
+    def inference(self, model, global_protos):
         """ Returns the inference accuracy and loss.
         """
 
@@ -147,12 +109,14 @@ class LocalUpdate(object):
             images, labels = images.to(self.device), labels.to(self.device)
 
             # Inference
-            outputs = model(images)
-            batch_loss = self.criterion(outputs, labels)
-            loss += batch_loss.item()
+            log_probs, protos = model.forward(images)
+            loss1 = self.criterion(log_probs, labels)
+            loss2 = 1/3 * self.contrastive_loss.forward(protos, labels, global_protos)
+            batch_loss = self.criterion(log_probs, labels)
+            loss += loss1.item() + loss2.item()
 
             # Prediction
-            _, pred_labels = torch.max(outputs, 1)
+            _, pred_labels = torch.max(log_probs, 1)
             pred_labels = pred_labels.view(-1)
             correct += torch.sum(torch.eq(pred_labels, labels)).item()
             total += len(labels)

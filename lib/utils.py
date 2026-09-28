@@ -40,8 +40,8 @@ def get_dataset(args, n_list, k_list):
         apply_transform = trans_covid19_train
 
         # Đã SỬA: Thay datasets.MNIST bằng covid19.COVID19 (gọi từ file covid19.py của bạn)
-        train_dataset = covid19.COVID19(args, data_dir, train=True, transform=apply_transform)
-
+        train_dataset = covid19.COVID19(args, data_dir, train=True, transform=apply_transform, train = True)
+        val_dataset = covid19.COVID19(args, data_dir, train=True, transform=apply_transform, train = False)
         # sample training data amongst users
         user_groups = covid19_iid(train_dataset, args.num_users)
 

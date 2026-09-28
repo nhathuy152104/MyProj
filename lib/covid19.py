@@ -82,48 +82,18 @@ class COVID19(data.Dataset):
         # self.data, self.targets = torch.load(os.path.join(self.processed_folder, data_file))
 
 
-    def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
+    def __init__(self, args, root, train=True, transform=None, target_transform=None, download=False):
+        self.root = os.path.expanduser(root)
+        self.transform = transform
+        self.target_transform = target_transform
+        self.train = train  # True = training set, False = val/test set
 
-        Returns:
-            tuple: (image, target) where target is index of the target class.
-        """
-        img, target = self.data[index], int(self.targets[index])
+        # Gọi hàm generate_ds và truyền cờ self.train vào để biết cần load tập nào
+        self.data, self.targets = self.generate_ds(args, self.root, is_train=self.train)
 
-        # doing this so that it is consistent with all other datasets
-        # to return a PIL Image
-        img = Image.open(img).convert('L')
-        # loader = transforms.Compose([transforms.ToTensor()])
-        # img = loader(img).unsqueeze(0)[0, 0, :, :]
 
-        if self.transform is not None:
-            img = self.transform(img)
-
-        if self.target_transform is not None:
-            target = self.target_transform(target)
-
-        return img, target
-
-    def __len__(self):
-        return len(self.data)
-
-    @property
-    def raw_folder(self):
-        return os.path.join(self.root, self.__class__.__name__, 'raw')
-
-    @property
-    def processed_folder(self):
-        return os.path.join(self.root, 'data', 'processed')
-
-    @property
-    def class_to_idx(self):
-        return {_class: i for i, _class in enumerate(self.classes)}
-
-    def generate_ds(self, args, root):
+    def generate_ds(self, args, root, is_train):
         num_class = args.num_classes
-        num_img = 1200
 
         data = []
         targets = []
@@ -131,7 +101,6 @@ class COVID19(data.Dataset):
         base_dir = root 
         
         # 1. Cố định danh sách class ĐÚNG TÊN THƯ MỤC và ĐÚNG THỨ TỰ (Index 0->3)
-        # Khớp tuyệt đối với dictionary label_to_idx ở file K-Means
         target_classes = ["COVID", "Lung_Opacity", "Normal", "Viral Pneumonia"]
         
         num_class = min(num_class, len(target_classes))
@@ -147,24 +116,32 @@ class COVID19(data.Dataset):
                 print(f"[LỖI] Không tìm thấy thư mục: {class_images_dir}")
                 continue
             
-            # Lấy tất cả ảnh png, jpg, jpeg
+            # Lấy tất cả ảnh png, jpg, jpeg và sắp xếp cố định
             image_paths = sorted(glob.glob(os.path.join(class_images_dir, '*.*')))
-            print(len(image_paths))
             valid_exts = ('.png', '.jpg', '.jpeg')
             image_paths = [p for p in image_paths if p.lower().endswith(valid_exts)]
             
-            if len(image_paths) < num_img:
-                print(f"[CẢNH BÁO] Class '{class_name}' chỉ có {len(image_paths)} ảnh (yêu cầu {num_img}).")
+            # --- LOGIC CHIA TRAIN / VAL ---
+            # Tính số lượng 1/6 dữ liệu
+            val_size = len(image_paths) // 6
             
-            selected_images = image_paths
+            if is_train:
+                # Bỏ qua 1/6 đầu tiên, lấy 5/6 phần còn lại làm tập Train
+                selected_images = image_paths[val_size:]
+            else:
+                # Lấy đúng 1/6 đầu tiên làm tập Val
+                selected_images = image_paths[:val_size]
             
             # Gán nhãn i (0, 1, 2, 3) cho các ảnh thuộc class tương ứng
             for img_path in selected_images:
                 data.append(img_path)
-                targets.append(i) # 'i' chính là index chuẩn của class
+                targets.append(i)
 
         targets = torch.tensor(targets, dtype=torch.long)
-        print(len(data))
+        
+        mode = "Train" if is_train else "Val"
+        print(f"Đã load tập {mode}: {len(data)} ảnh")
+        
         return data, targets
     # def generate_ds_test(self, args, root):
     #     # read 100 images per classes per style

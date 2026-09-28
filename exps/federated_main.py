@@ -21,7 +21,7 @@ if str(mod_dir) not in sys.path:
     sys.path.insert(0, str(mod_dir))
 
 
-def FedFM(args, train_dataset, user_groups, user_groups_lt, local_model_list, classes_list):
+def FedFM(args, train_dataset, val_dataset user_groups, user_groups_lt, local_model_list, classes_list):
     summary_writer = SummaryWriter('../tensorboard/'+ args.dataset +'_fedproto_' + str(args.ways) + 'w' + str(args.shots) + 's' + str(args.stdev) + 'e_' + str(args.num_users) + 'u_' + str(args.rounds) + 'r')
 
     protos_path = "/kaggle/working/MyProj/exps/global_protos_dict.pt"
@@ -45,7 +45,7 @@ def FedFM(args, train_dataset, user_groups, user_groups_lt, local_model_list, cl
 
         proto_loss = 0
         for idx in idxs_users: 
-            local_model = LocalUpdate(args = args, dataset=train_dataset, idxs=user_groups[idx])
+            local_model = LocalUpdate(args = args, dataset=train_dataset, val_dataset = val_dataset, idxs=user_groups[idx])
             w, loss, acc = local_model.update_weights_fedfm(idx, global_protos, model = copy.deepcopy(local_model_list[idx]), global_round = round)
 
             local_weights.append(copy.deepcopy(w))
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         k_list = np.random.randint(args.shots - args.stdev + 1, args.shots + args.stdev - 1, args.num_users)
     print("k_list")
     print(k_list)
-    train_dataset, user_groups, user_groups_lt, classes_list, classes_list_gt = get_dataset(args, n_list, k_list) 
+    train_dataset, val_dataset, user_groups, user_groups_lt, classes_list, classes_list_gt = get_dataset(args, n_list, k_list) 
     print(len(train_dataset))
     local_model_list = []
     for i in range(args.num_users):
@@ -132,5 +132,5 @@ if __name__ == '__main__':
         local_model.train()
         local_model_list.append(local_model)
 
-    FedFM(args, train_dataset, user_groups, user_groups_lt, local_model_list, classes_list)
+    FedFM(args, train_dataset, val_dataset, user_groups, user_groups_lt, local_model_list, classes_list)
     
