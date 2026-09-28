@@ -77,6 +77,40 @@ class COVID19(data.Dataset):
 
     def __len__(self):
         return len(self.data)
+    def __getitem__(self, index):
+
+        """
+
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        img, target = self.data[index], int(self.targets[index])
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        img = Image.open(img).convert('L')
+        # loader = transforms.Compose([transforms.ToTensor()])
+        # img = loader(img).unsqueeze(0)[0, 0, :, :]
+        if self.transform is not None:
+            img = self.transform(img)   
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return img, target
+
+    @property
+    def raw_folder(self):
+        return os.path.join(self.root, self.__class__.__name__, 'raw')
+    @property
+    def processed_folder(self):
+        return os.path.join(self.root, 'data', 'processed')
+    @property
+    def class_to_idx(self):
+        return {_class: i for i, _class in enumerate(self.classes)}
+    def generate_ds(self, args, root):
+        num_class = args.num_classes
+
     def generate_ds(self, args, root, is_train):
         num_class = args.num_classes
 
