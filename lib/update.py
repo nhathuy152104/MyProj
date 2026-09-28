@@ -103,13 +103,13 @@ class LocalUpdate(object):
                 model.zero_grad()
                 log_probs, protos = model.forward(images)
                 loss1 = self.criterion(log_probs, labels)
-                loss2 = 1/3 * self.contrastive_loss.forward(protos, labels, global_protos)
+                # loss2 = 1/3 * self.contrastive_loss.forward(protos, labels, global_protos)
 
-                loss = loss1 + loss2
+                loss = loss1 
                 loss.backward()
                 optimizer.step()
                 print("loss1: ", loss1.item())
-                print("loss2: ", loss2.item())
+                # print("loss2: ", loss2.item())
 
                 _, y_hat = log_probs.max(1)
                 acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
