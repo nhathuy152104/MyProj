@@ -109,9 +109,8 @@ if __name__ == '__main__':
 
     local_model_list = []
     for i in range(args.num_users):
-        if args.dataset == 'covid19':
-            args.out_channels = 4
-            local_model = ClientModel()
+        args.out_channels = 4
+        local_model = ClientModel()
 
         local_model.to(args.device)
         local_model.train()
