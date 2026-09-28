@@ -13,13 +13,14 @@ class MLP(nn.Module):
         self.softmax = nn.Softmax(dim = 1)
 
     def forward(self, x):
-        x = x.view(-1, x.shape[1] * x.shape[-2] * x.shape[-1])
+        # SỬA LỖI: Làm phẳng an toàn, giữ nguyên batch_size dù đầu vào là 2D hay 4D
+        x = x.view(x.size(0), -1) 
+        
         x = self.layer_input(x)
         x = self.dropout(x)
         x = self.relu(x)
         x = self.layer_hidden(x)
         return self.softmax(x)
-
 
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
