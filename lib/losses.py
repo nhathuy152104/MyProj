@@ -58,7 +58,8 @@ class MultiProtoSupConLoss(nn.Module):
             dim = -1
         )
         sim_matrix = sim_matrix / self.temp
-
+        print(labels) 
+        print(sim_matrix)
         pos_sims = sim_matrix[torch.arange(batch_size), labels]
         pos_logits, _ = torch.max(pos_sims, dim = 1)
 

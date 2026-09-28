@@ -106,7 +106,7 @@ class LocalUpdate(object):
                 loss1 = self.criterion(log_probs, labels)
                 loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
 
-                loss = loss1
+                loss = loss1 + loss2
                 loss.backward()
                 optimizer.step()
 
