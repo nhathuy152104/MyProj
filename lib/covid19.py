@@ -156,7 +156,7 @@ class COVID19(data.Dataset):
             if len(image_paths) < num_img:
                 print(f"[CẢNH BÁO] Class '{class_name}' chỉ có {len(image_paths)} ảnh (yêu cầu {num_img}).")
             
-            selected_images = image_paths[:num_img]
+            selected_images = image_paths
             
             # Gán nhãn i (0, 1, 2, 3) cho các ảnh thuộc class tương ứng
             for img_path in selected_images:
