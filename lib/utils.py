@@ -26,7 +26,7 @@ def get_dataset(args, n_list, k_list):
     the keys are the user index and the values are the corresponding data for
     each of those users.
     """
-    data_dir = args.data_dir + args.dataset
+    data_dir = args.data_dir
     
     # Bổ sung khởi tạo các biến mặc định để tránh lỗi UnboundLocalError 
     # khi chạy nhánh IID (vì nhánh IID không tạo ra classes_list, user_groups_lt...)
