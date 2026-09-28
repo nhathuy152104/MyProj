@@ -163,6 +163,7 @@ class COVID19(data.Dataset):
                 targets.append(i) # 'i' chính là index chuẩn của class
 
         targets = torch.tensor(targets, dtype=torch.long)
+        print(len(data))
         return data, targets
     # def generate_ds_test(self, args, root):
     #     # read 100 images per classes per style
