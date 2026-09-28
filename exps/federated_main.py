@@ -11,7 +11,7 @@ from lib.utils import get_dataset, average_weights, exp_details, proto_aggregati
 from lib.options import args_parser
 from lib.update import LocalUpdate
 from lib.models.models import ClientModel
-
+import os
 
 lib_dir = (Path(__file__).parent / ".." / "lib").resolve()
 if str(lib_dir) not in sys.path:
@@ -24,7 +24,17 @@ if str(mod_dir) not in sys.path:
 def FedFM(args, train_dataset, user_groups, user_groups_lt, local_model_list, classes_list):
     summary_writer = SummaryWriter('../tensorboard/'+ args.dataset +'_fedproto_' + str(args.ways) + 'w' + str(args.shots) + 's' + str(args.stdev) + 'e_' + str(args.num_users) + 'u_' + str(args.rounds) + 'r')
 
-    global_protos = []
+    protos_path = "global_protos_dict.pt"
+    
+    if os.path.exists(protos_path):
+        # Đọc Dictionary chứa Tensor từ file vào bộ nhớ
+        global_protos = torch.load(protos_path)
+        print(f"[*] Đã tải thành công tâm cụm toàn cục từ '{protos_path}'")
+        print(f"    Số class được load: {len(global_protos)}")
+    else:
+        print(f"[CẢNH BÁO] Không tìm thấy '{protos_path}'. Sẽ khởi tạo rỗng.")
+        # Khởi tạo Dictionary rỗng (không dùng List [] để tránh lỗi TypeError ở hàm Loss)
+        global_protos = {}
 
     idxs_users = np.arange(args.num_users)
     train_loss, train_accuracy = [], []

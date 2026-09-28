@@ -128,35 +128,42 @@ class COVID19(data.Dataset):
         data = []
         targets = []
         
-        # 1. Base directory lúc này trỏ trực tiếp vào ROOT bạn cung cấp
         base_dir = root 
         
-        # 2. Lấy danh sách 4 thư mục class và Sắp xếp để cố định label
-        files = sorted([d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))])
+        # 1. Cố định danh sách class ĐÚNG TÊN THƯ MỤC và ĐÚNG THỨ TỰ (Index 0->3)
+        # Khớp tuyệt đối với dictionary label_to_idx ở file K-Means
+        target_classes = ["COVID", "Lung_Opacity", "Normal", "Viral Pneumonia"]
         
-        num_class = min(num_class, len(files))
+        num_class = min(num_class, len(target_classes))
 
         for i in range(num_class):
-            # 3. Trỏ thẳng vào thư mục 'images' bên trong mỗi class
-            class_images_dir = os.path.join(base_dir, files[i], 'images')
+            class_name = target_classes[i]
             
-            # Lấy tất cả ảnh png, jpg
+            # 2. Trỏ thẳng vào thư mục 'images' bên trong từng class cụ thể
+            class_images_dir = os.path.join(base_dir, class_name, 'images')
+            
+            # Kiểm tra an toàn: Nếu nhập sai đường dẫn hoặc thiếu thư mục
+            if not os.path.exists(class_images_dir):
+                print(f"[LỖI] Không tìm thấy thư mục: {class_images_dir}")
+                continue
+            
+            # Lấy tất cả ảnh png, jpg, jpeg
             image_paths = sorted(glob.glob(os.path.join(class_images_dir, '*.*')))
             valid_exts = ('.png', '.jpg', '.jpeg')
             image_paths = [p for p in image_paths if p.lower().endswith(valid_exts)]
             
             if len(image_paths) < num_img:
-                print(f"[CẢNH BÁO] Class '{files[i]}' chỉ có {len(image_paths)} ảnh (yêu cầu {num_img}).")
+                print(f"[CẢNH BÁO] Class '{class_name}' chỉ có {len(image_paths)} ảnh (yêu cầu {num_img}).")
             
             selected_images = image_paths[:num_img]
             
+            # Gán nhãn i (0, 1, 2, 3) cho các ảnh thuộc class tương ứng
             for img_path in selected_images:
                 data.append(img_path)
-                targets.append(i)
+                targets.append(i) # 'i' chính là index chuẩn của class
 
         targets = torch.tensor(targets, dtype=torch.long)
         return data, targets
-
     # def generate_ds_test(self, args, root):
     #     # read 100 images per classes per style
 
