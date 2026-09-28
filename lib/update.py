@@ -109,7 +109,7 @@ class LocalUpdate(object):
                 loss.backward()
                 optimizer.step()
                 print("loss1: ", loss1.item())
-                print("loss2: ", loss2.item())
+                # print("loss2: ", loss2.item())
 
                 _, y_hat = log_probs.max(1)
                 acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
