@@ -36,7 +36,7 @@ def FedFM(args, train_dataset, user_groups, user_groups_lt, local_model_list, cl
         proto_loss = 0
         for idx in idxs_users: 
             local_model = LocalUpdate(args = args, dataset=train_dataset, idxs=user_groups[idx])
-            w, loss, acc = local_model.update_weights_fm(args, idx, global_protos, model = copy.deepcopy(local_model_list[idx], global_round = round))
+            w, loss, acc = local_model.update_weights_fedfm(args, idx, global_protos, model = copy.deepcopy(local_model_list[idx], global_round = round))
 
             local_weights.append(copy.deepcopy(w))
             local_losses.append(copy.deepcopy(loss['total']))
