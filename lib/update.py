@@ -7,7 +7,6 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 import copy
 import numpy as np
-from models import CNNFemnist
 from losses import MultiProtoSupConLoss
 
 class DatasetSplit(Dataset):
