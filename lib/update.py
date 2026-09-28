@@ -123,7 +123,7 @@ class LocalUpdate(object):
                         acc_val.item()))
                 batch_loss['total'].append(loss.item())
                 batch_loss['1'].append(loss1.item())
-                batch_loss['2'].append(loss2.item())
+                batch_loss['2'].append("0")
             epoch_loss['total'].append(sum(batch_loss['total'])/len(batch_loss['total']))
             epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
             epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
