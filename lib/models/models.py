@@ -4,17 +4,19 @@ import torchvision.models as models
 import torchvision
 
 class MLP(nn.Module):
-    def __init__(self, dim_in, dim_hidden, dim_out):
+    def __init__(self, dim_in, dim_out, dim_hidden=256):
         super(MLP, self).__init__()
         self.layer_input = nn.Linear(dim_in, dim_hidden)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout()
+        self.dropout = nn.Dropout(p=0.5) 
         self.layer_hidden = nn.Linear(dim_hidden, dim_out)
         self.log_softmax = nn.LogSoftmax(dim=1)
-    def forward(self, x):        
+
+    def forward(self, x):
+        x = x.view(x.size(0), -1) 
         x = self.layer_input(x)
-        x = self.dropout(x)
         x = self.relu(x)
+        x = self.dropout(x)
         x = self.layer_hidden(x)
         return self.log_softmax(x)
 
@@ -37,11 +39,13 @@ class ClientModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.Encoder = MEDCLIPVisionModel()
-        self.head = MLP(512, 512, 4)
+        self.head = MLP(512, 4)
         print('encode head')
 
     def forward(self, x):
+        print(x.shape)
         x1 = self.Encoder.forward(x)
+        print(x1.shape)
         x2 = self.head.forward(x1)
 
         return x2, x1
