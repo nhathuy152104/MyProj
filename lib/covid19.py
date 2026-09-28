@@ -75,7 +75,8 @@ class COVID19(data.Dataset):
         # Gọi hàm generate_ds và truyền cờ self.train vào để biết cần load tập nào
         self.data, self.targets = self.generate_ds(args, self.root, is_train=self.train)
 
-
+    def __len__(self):
+        return len(self.data)
     def generate_ds(self, args, root, is_train):
         num_class = args.num_classes
 
