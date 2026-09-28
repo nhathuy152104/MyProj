@@ -24,7 +24,7 @@ class MLP(nn.Module):
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = torchvision.models.resnet50(pretrained=True)
+        self.model = torchvision.models.resn3et50(pretrained=True)
         num_fts = self.model.in_feature
         self.model.fc = nn.Linear(num_fts, 512, bias = False)
 
