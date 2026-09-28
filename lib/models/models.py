@@ -12,9 +12,7 @@ class MLP(nn.Module):
         self.layer_hidden = nn.Linear(dim_hidden, dim_out)
         self.softmax = nn.Softmax(dim = 1)
 
-    def forward(self, x):
-        x = x.view(x.size(0), -1) 
-        
+    def forward(self, x):        
         x = self.layer_input(x)
         x = self.dropout(x)
         x = self.relu(x)
