@@ -64,6 +64,8 @@ class LocalUpdate(object):
 
                 model.zero_grad()
                 log_probs, protos = model(images)
+                print(labels.shape)
+                print(log_probs.shape)
                 loss = self.criterion(log_probs, labels)
 
                 loss.backward()
