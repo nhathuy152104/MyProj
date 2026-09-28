@@ -7,7 +7,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 import copy
 import numpy as np
-from losses import MultiProtoSupConLoss
+from .losses import MultiProtoSupConLoss
 
 class DatasetSplit(Dataset):
     """An abstract Dataset class wrapped around Pytorch Dataset class.
