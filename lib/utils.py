@@ -5,7 +5,7 @@
 import copy
 import torch
 from torchvision import datasets, transforms
-from sampling import covid19_iid
+from .sampling import covid19_iid
 import covid19
 import numpy as np
 import constants
