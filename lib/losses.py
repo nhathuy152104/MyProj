@@ -50,19 +50,42 @@ class MultiProtoSupConLoss(nn.Module):
 
         global_prototypes = global_prototypes.to(z.device)
 
-        # 3. TÍNH TOÁN LOSS
-        # Lúc này global_prototypes CHẮC CHẮN là 3D Tensor, hàm unsqueeze sẽ hoạt động
+        M = global_prototypes.size(1) # Kích thước M (Số lượng sub-prototypes mỗi class)
+
+        # 1. Tính Cosine Similarity
+        # sim_matrix: [batch_size, num_classes, M]
         sim_matrix = F.cosine_similarity(
             z.unsqueeze(1).unsqueeze(1), 
             global_prototypes.unsqueeze(0),
             dim = -1
         )
-
         sim_matrix = sim_matrix / self.temp
-        pos_sims = sim_matrix[torch.arange(batch_size), labels]
-        pos_logits, _ = torch.max(pos_sims, dim = 1)
-
+        
+        # Đưa về dạng ma trận 2D cho toàn bộ logit: [batch_size, num_classes * M]
         all_logits = sim_matrix.view(batch_size, -1)
-        loss = -pos_logits + torch.logsumexp(all_logits, dim = 1)
+        
+        # 2. Tính Log-Softmax của logits (tương đương với vế -log(p) trong công thức)
+        log_probs = F.log_softmax(all_logits, dim=1)
+
+        # 3. Tạo Soft Targets (Mục tiêu mềm) theo chuẩn MedCLIP
+        soft_targets = torch.zeros_like(log_probs)
+        
+        # Tìm index của tất cả M sub-prototypes thuộc class đúng của từng sample
+        # Ví dụ: M=3, nhãn=1 => index = [3, 4, 5]
+        label_indices = labels.unsqueeze(1) * M + torch.arange(M, device=z.device)
+        
+        # Rải đều trọng số (1/M) cho tất cả các tâm thuộc cùng class
+        # Điều này loại bỏ hoàn toàn False Negatives trong nội bộ class
+        soft_targets.scatter_(1, label_indices, 1.0 / M)
+        
+        # (Tuỳ chọn) Nếu bạn muốn Soft-Target Tự thích ứng dựa trên khoảng cách hiện tại:
+        # Thay vì chia đều 1/M, ta lấy chính Softmax của độ đo hiện tại (như MedCLIP dùng Text-Sim)
+        # pos_sims = sim_matrix[torch.arange(batch_size), labels] # [batch_size, M]
+        # soft_weights = F.softmax(pos_sims.detach(), dim=1)
+        # soft_targets.scatter_(1, label_indices, soft_weights)
+
+        # 4. Tính Cross Entropy Loss với phân phối mềm (KL-Divergence)
+        # Công thức: Loss = Trung bình ( Tổng ( - Target_i * Log_Prob_i ) )
+        loss = torch.sum(-soft_targets * log_probs, dim=1)
 
         return loss.mean()
