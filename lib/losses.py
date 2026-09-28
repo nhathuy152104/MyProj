@@ -44,7 +44,6 @@ class MultiProtoSupConLoss(nn.Module):
                 feature_dim=z.size(1), 
                 device=z.device
             )
-            print(global_prototypes)
         # 2. XỬ LÝ VÒNG 1 (Nếu chưa có dữ liệu, trả về Loss = 0)
         if not isinstance(global_prototypes, torch.Tensor) or global_prototypes.numel() == 0:
             return torch.tensor(0.0, requires_grad=True, device=z.device)

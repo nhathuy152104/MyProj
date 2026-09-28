@@ -43,9 +43,7 @@ class ClientModel(nn.Module):
         print('encode head')
 
     def forward(self, x):
-        print(x.shape)
         x1 = self.Encoder.forward(x)
-        print(x1.shape)
         x2 = self.head.forward(x1)
 
         return x2, x1
