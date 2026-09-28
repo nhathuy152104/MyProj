@@ -123,7 +123,7 @@ class COVID19(data.Dataset):
 
     def generate_ds(self, args, root):
         num_class = args.num_classes
-        num_img = args.train_shots_max * args.num_users
+        num_img = 1200
 
         data = []
         targets = []
