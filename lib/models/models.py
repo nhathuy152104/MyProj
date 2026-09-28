@@ -45,5 +45,5 @@ class ClientModel(nn.Module):
     def forward(self, x):
         x1 = self.Encoder.forward(x)
         x2 = self.head.forward(x1)
-
-        return x2, x1
+        x1_normalized = F.normalize(x1, p=2, dim=1)
+        return x2, x1_normalized

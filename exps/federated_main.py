@@ -115,10 +115,12 @@ if __name__ == '__main__':
     random.seed(args.seed)
 
     n_list = np.random.randint(max(2, args.ways - args.stdev), min(args.num_classes, args.ways + args.stdev  + 1), args.num_users)
-
+    print("n_list")
+    print(n_list)
     if args.dataset == 'covid19':
         k_list = np.random.randint(args.shots - args.stdev + 1, args.shots + args.stdev - 1, args.num_users)
-
+    print("k_list")
+    print(k_list)
     train_dataset, user_groups, user_groups_lt, classes_list, classes_list_gt = get_dataset(args, n_list, k_list) 
 
     local_model_list = []
