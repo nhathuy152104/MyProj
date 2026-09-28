@@ -25,7 +25,7 @@ class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = torchvision.models.resnet50(pretrained=True)
-        num_fts = self.model.in_feature
+        num_fts = self.model.fc.in_features
         self.model.fc = nn.Linear(num_fts, 512, bias = False)
 
     def forward(self, pixel_values, **kwargs):
