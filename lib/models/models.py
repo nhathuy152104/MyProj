@@ -43,7 +43,9 @@ class ClientModel(nn.Module):
         self.head = MLP(512, 512, 4)
 
     def forward(self, x):
+        print(x.shape)
         x1 = self.Encoder.forward(x)
+        print(x1.shape)
         x2 = self.head.forward(x1)
 
         return x2, x1
