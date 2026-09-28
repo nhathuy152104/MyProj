@@ -26,19 +26,18 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, dataset, val_dataset, idxs):
+    def __init__(self, args, dataset, val_dataset):
         self.args = args
-        self.trainloader = self.train_val_test(dataset, list(idxs))
+        self.trainloader = self.train_val_test(dataset)
         self.device = args.device
         self.criterion = nn.NLLLoss().to(self.device)
         self.contrastive_loss = MultiProtoSupConLoss().to(self.device)
 
-    def train_val_test(self, dataset, idxs):
+    def train_val_test(self, dataset):
         """
         Returns train, validation and test dataloaders for a given dataset
         and user indexes.
         """
-        idxs_train = idxs[:int(1 * len(idxs))]
         trainloader = DataLoader(dataset, batch_size=self.args.local_bs, shuffle=True, drop_last=True)
 
         return trainloader
@@ -112,7 +111,6 @@ class LocalUpdate(object):
             log_probs, protos = model.forward(images)
             loss1 = self.criterion(log_probs, labels)
             loss2 = 1/3 * self.contrastive_loss.forward(protos, labels, global_protos)
-            batch_loss = self.criterion(log_probs, labels)
             loss += loss1.item() + loss2.item()
 
             # Prediction

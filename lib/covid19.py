@@ -63,23 +63,7 @@ class COVID19(data.Dataset):
         warnings.warn("test_data has been renamed data")
         return self.data
 
-    def __init__(self, args, root, train=True, transform=None, target_transform=None, download=False):
-        self.root = os.path.expanduser(root)
-        self.transform = transform
-        self.target_transform = target_transform
-        self.train = train  # training set or test set
 
-        # s_list = random.sample(range(0, 7), num_users)
-        if self.train:
-            # data_file = self.training_file
-            self.data, self.targets = self.generate_ds(args, self.root)
-            # self.loader = self.generate_ds(args, self.root)
-        else:
-            # data_file = self.test_file
-            # self.data, self.targets = self.generate_ds_test(args, self.root)
-            pass
-            # self.loader = self.generate_ds_test(args, self.root)
-        # self.data, self.targets = torch.load(os.path.join(self.processed_folder, data_file))
 
 
     def __init__(self, args, root, train=True, transform=None, target_transform=None, download=False):

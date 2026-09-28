@@ -43,9 +43,9 @@ def get_dataset(args, n_list, k_list):
         train_dataset = covid19.COVID19(args, data_dir, train=True, transform=apply_transform)
         val_dataset = covid19.COVID19(args, data_dir, train=False, transform=apply_transform)
         # sample training data amongst users
-        user_groups = covid19_iid(train_dataset, args.num_users)
-
-    return train_dataset, user_groups, user_groups_lt, classes_list, classes_list_gt
+        # user_groups = covid19_iid(train_dataset, args.num_users)
+        user_groups = 1
+    return train_dataset, val_dataset, user_groups, user_groups_lt, classes_list, classes_list_gt
 
 def average_weights(w):
     """
