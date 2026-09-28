@@ -47,7 +47,6 @@ class LocalUpdate(object):
 
 
     def update_weights_fedfm(self, idx, global_protos, model, global_round):
-        model.train()
         epoch_loss = {'total': [], '1': [], '2': []}    
         if self.args.optimizer == 'sgd':
             optimizer = torch.optim.SGD(model.parameters(), lr=self.args.lr,
@@ -57,6 +56,8 @@ class LocalUpdate(object):
                                          weight_decay=1e-4)
 
         for iter in range(self.args.train_ep):
+            model.train()
+
             batch_loss = {'total': [], '1': [], '2': []}
             for batch_idx, (images, labels_g) in enumerate(self.trainloader):
                 images, labels = images.to(self.device), labels_g.to(self.device)
