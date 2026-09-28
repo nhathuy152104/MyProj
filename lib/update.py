@@ -107,10 +107,10 @@ class LocalUpdate(object):
                 loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
 
                 loss = loss1 + loss2
-                print(loss1)
-                print(loss2)
                 loss.backward()
                 optimizer.step()
+                print(loss1.item())
+                print(loss2.item())
 
                 _, y_hat = log_probs.max(1)
                 acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
