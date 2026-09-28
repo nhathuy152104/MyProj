@@ -105,6 +105,7 @@ class LocalUpdate(object):
 
                 model.zero_grad()
                 log_probs, protos = model.forward(images)
+                print(log_probs)
                 loss1 = self.criterion(log_probs, labels)
                 loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
                 print("NLLLoss: ", loss1)
