@@ -42,6 +42,7 @@ class ClientModel(nn.Module):
         super().__init__()
         self.Encoder = MEDCLIPVisionModel()
         self.head = MLP(512, 512, 4)
+        print('encode head')
 
     def forward(self, x):
         print(x.shape)
