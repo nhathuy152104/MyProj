@@ -57,15 +57,8 @@ class MultiProtoSupConLoss(nn.Module):
             global_prototypes.unsqueeze(0),
             dim = -1
         )
-        print("global prototypes")
-        print(global_prototypes)
-        print("z")
-        print(z)
-        print("sim_matrix")
-        print(sim_matrix)
 
         sim_matrix = sim_matrix / self.temp
-        print(labels) 
         pos_sims = sim_matrix[torch.arange(batch_size), labels]
         pos_logits, _ = torch.max(pos_sims, dim = 1)
 
