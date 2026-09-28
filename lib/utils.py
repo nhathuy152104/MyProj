@@ -60,12 +60,7 @@ def get_dataset(args, n_list, k_list):
         train_dataset = covid19.COVID19(args, data_dir, train=True, transform=apply_transform)
 
         # sample training data amongst users
-        if args.iid:
-            # Sample IID user data from COVID19
-            user_groups = covid19_iid(train_dataset, args.num_users)
-        else:
-
-            pass
+        user_groups = covid19_iid(train_dataset, args.num_users)
 
     return train_dataset, user_groups, user_groups_lt, classes_list, classes_list_gt
 
