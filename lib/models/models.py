@@ -16,15 +16,13 @@ class MLP(nn.Module):
         # 1. Khối Projection (Nén và tạo phi tuyến tính)
         # Bắt buộc phải gom vào Sequential để code sạch sẽ
         self.projection = nn.Sequential(
+            nn.ReLU(),
             nn.Dropout(p=0.5),      # Dropout nên để trước hoặc sau ReLU
-            nn.Linear(in_features, in_features), # Bạn có thể đổi output thành hidden_dim (vd: 128)
-            nn.ReLU()
+            nn.Linear(in_features, num_classes), # Bạn có thể đổi output thành hidden_dim (vd: 128)
         )
         
         # 2. Khối Phân loại Cosine (Thay thế hoàn toàn nn.Linear cuối)
-        # Khởi tạo trọng số W như các "Mỏ neo ảo"
-        self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
-        nn.init.xavier_uniform_(self.weight)
+        # Khởi tạo trọng số W như các "Mỏ neo ảo
 
     def forward(self, x):
         # Bước 1: Trích xuất đặc trưng qua MLP
