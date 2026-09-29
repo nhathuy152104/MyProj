@@ -4,26 +4,24 @@ import torchvision.models as models
 import torchvision
 
 class MLP(nn.Module):
-    def __init__(self, dim_in, dim_out, dim_hidden=256):
+    def __init__(self, dim_in, dim_out):
         super(MLP, self).__init__()
-        self.layer_input = nn.Linear(dim_in, dim_hidden)
+        self.layer = nn.Linear(dim_in, dim_out)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.5) 
-        self.layer_hidden = nn.Linear(dim_hidden, dim_out)
         self.log_softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
         x = x.view(x.size(0), -1) 
-        x = self.layer_input(x)
         x = self.relu(x)
         x = self.dropout(x)
-        x = self.layer_hidden(x)
+        x = self.layer(x)
         return self.log_softmax(x)
 
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = torchvision.models.resnet50(pretrained=True)
+        self.model = torchvision.models.resnet50(pretrained=False)
         num_fts = self.model.fc.in_features
         self.model.fc = nn.Linear(num_fts, 512, bias = False)
 

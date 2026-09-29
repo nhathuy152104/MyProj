@@ -48,11 +48,7 @@ class LocalUpdate(object):
 
     def update_weights_fedfm(self, idx, global_protos, model, global_round):
         epoch_loss = {'total': [], '1': [], '2': []}    
-        if self.args.optimizer == 'sgd':
-            optimizer = torch.optim.SGD(model.parameters(), lr=self.args.lr,
-                                        momentum=0.5)
-        elif self.args.optimizer == 'adam':
-            optimizer = torch.optim.Adam(model.parameters(), lr=self.args.lr,
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.args.lr,
                                          weight_decay=1e-4)
 
         for iter in range(self.args.train_ep):
