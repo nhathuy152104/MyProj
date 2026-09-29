@@ -2,22 +2,23 @@ from torch import nn
 import torch.nn.functional as F
 import torchvision.models as models
 import torchvision
+import torch
 
 class MLP(nn.Module):
-    def __init__(self, dim_in, dim_out):
-        super(MLP, self).__init__()
-        self.layer = nn.Linear(dim_in, dim_out)
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p=0.5) 
-        self.log_softmax = nn.LogSoftmax(dim=1)
+    def __init__(self, in_features, num_classes, tau=0.07):
+        super().__init__()
+        self.weight = nn.Parameter(torch.Tensor(num_classes, in_features))
+        nn.init.xavier_uniform_(self.weight)
+        self.tau = tau
 
     def forward(self, x):
-        x = x.view(x.size(0), -1) 
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.layer(x)
-        return self.log_softmax(x)
-
+        # 1. Chuẩn hóa x và trọng số W lên mặt cầu
+        x_norm = F.normalize(x, p=2, dim=1)
+        w_norm = F.normalize(self.weight, p=2, dim=1)
+        
+        # 2. Tính Cosine thay vì tích vô hướng
+        logits = F.linear(x_norm, w_norm) / self.tau
+        return logits
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
