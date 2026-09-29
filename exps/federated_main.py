@@ -126,8 +126,7 @@ if __name__ == '__main__':
     local_model_list = []
     for i in range(args.num_users):
         args.out_channels = 4
-        local_model = MEDCLIPVisionModel
-
+        local_model = MEDCLIPVisionModel()
         local_model.to(args.device)
         local_model.train()
         local_model_list.append(local_model)
