@@ -38,8 +38,12 @@ class MEDCLIPVisionModel(nn.Module):
 class ClientModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.Encoder = MEDCLIPVisionModel().load_state_dict('/kaggle/input/models/huynhat15/gogo/pytorch/default/1/client_0_round_0.pth.tar')
-        self.head = MLP(512, 4)
+        self.Encoder = MEDCLIPVisionModel()
+        checkpoint_path = '/kaggle/input/models/huynhat15/gogo/pytorch/default/1/client_0_round_0.pth.tar'
+        state_dict = torch.load(checkpoint_path, map_location='cpu')
+
+        # 3. Nạp Dictionary trọng số vào mô hình
+        self.Encoder.load_state_dict(state_dict)
         print('encode head')
 
     def forward(self, x):
