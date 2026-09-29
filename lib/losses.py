@@ -27,7 +27,7 @@ def format_global_protos_for_loss(global_protos_dict, num_classes, feature_dim, 
     return formatted_tensor
 
 class MultiProtoSupConLoss(nn.Module):
-    def __init__(self, num_classes=4, temperature=0.01):
+    def __init__(self, num_classes=4, temperature=0.1):
         super().__init__()
         # Đưa num_classes ra khởi tạo để tái sử dụng dễ dàng cho dataset khác
         self.num_classes = num_classes 
