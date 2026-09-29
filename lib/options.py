@@ -15,7 +15,7 @@ def args_parser():
                         help="number of users: K")
     parser.add_argument('--frac', type=float, default=0.04,
                         help='the fraction of clients: C')
-    parser.add_argument('--train_ep', type=int, default=10,
+    parser.add_argument('--train_ep', type=int, default=100,
                         help="the number of local episodes: E")
     parser.add_argument('--local_bs', type=int, default=128,
                         help="local batch size: B")
