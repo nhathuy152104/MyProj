@@ -146,7 +146,7 @@ class COVID19(data.Dataset):
             
             if is_train:
                 # Bỏ qua 1/6 đầu tiên, lấy 5/6 phần còn lại làm tập Train
-                selected_images = image_paths[val_size:]
+                selected_images = image_paths
             else:
                 # Lấy đúng 1/6 đầu tiên làm tập Val
                 selected_images = image_paths[:val_size]

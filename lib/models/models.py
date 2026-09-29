@@ -39,6 +39,7 @@ class MEDCLIPVisionModel(nn.Module):
     def forward(self, pixel_values, **kwargs):
         if pixel_values.shape[1] == 1: pixel_values = pixel_values.repeat((1,3,1,1))
         img_embeds = self.model(pixel_values)
+        img_embeds = img_embeds / img_embeds.norm(dim=-1, keepdim=True)
         return img_embeds
 
 

@@ -10,7 +10,7 @@ from pathlib import Path
 from lib.utils import get_dataset, average_weights, exp_details, proto_aggregation, agg_func, average_weights_per, average_weights_sem
 from lib.options import args_parser
 from lib.update import LocalUpdate
-from lib.models.models import ClientModel
+from lib.models.models import MEDCLIPVisionModel
 import os
 
 lib_dir = (Path(__file__).parent / ".." / "lib").resolve()
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     local_model_list = []
     for i in range(args.num_users):
         args.out_channels = 4
-        local_model = ClientModel()
+        local_model = MEDCLIPVisionModel()
 
         local_model.to(args.device)
         local_model.train()
