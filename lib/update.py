@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 import copy
 import numpy as np
 from .losses import MultiProtoSupConLoss
-import os
+
 class DatasetSplit(Dataset):
     """An abstract Dataset class wrapped around Pytorch Dataset class.
     """
@@ -61,9 +61,9 @@ class LocalUpdate(object):
                 model.zero_grad()
                 log_probs, protos = model.forward(images)
                 loss1 = self.criterion(log_probs, labels)
-                loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
+                loss2 = 1/3 * self.contrastive_loss.forward(protos, labels, global_protos)
 
-                loss = loss2
+                loss = loss1 + loss2
                 loss.backward()
                 optimizer.step()
                 print("loss1: ", loss1.item())
@@ -82,17 +82,12 @@ class LocalUpdate(object):
                 batch_loss['total'].append(loss.item())
                 batch_loss['1'].append(loss1.item())
                 batch_loss['2'].append(loss2.item())
-            local_weights = copy.deepcopy(model.state_dict())
-            save_dir = "./client_weights"   
-            os.makedirs(save_dir, exist_ok=True)
-            save_path = os.path.join(save_dir, f"client_{idx}_round_{global_round}.pth")
-            torch.save(local_weights, save_path)
             epoch_loss['total'].append(sum(batch_loss['total'])/len(batch_loss['total']))
             epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
             epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
 
-            # val_acc, val_loss = self.inference(model, global_protos)
-            # print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+            val_acc, val_loss = self.inference(model, global_protos)
+            print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
         epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
         epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
         epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
