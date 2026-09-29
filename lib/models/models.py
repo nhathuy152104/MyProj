@@ -4,32 +4,56 @@ import torchvision.models as models
 import torchvision
 import torch
 
-class MLP(nn.Module):
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class MLPCosineHead(nn.Module):
     def __init__(self, in_features, num_classes, tau=0.07):
         super().__init__()
-        self.weight = nn.Parameter(torch.Tensor(num_classes, in_features))
-        nn.init.xavier_uniform_(self.weight)
         self.tau = tau
+        
+        # 1. Khối Projection (Nén và tạo phi tuyến tính)
+        # Bắt buộc phải gom vào Sequential để code sạch sẽ
+        self.projection = nn.Sequential(
+            nn.Dropout(p=0.5),      # Dropout nên để trước hoặc sau ReLU
+            nn.Linear(in_features, in_features), # Bạn có thể đổi output thành hidden_dim (vd: 128)
+            nn.ReLU()
+        )
+        
+        # 2. Khối Phân loại Cosine (Thay thế hoàn toàn nn.Linear cuối)
+        # Khởi tạo trọng số W như các "Mỏ neo ảo"
+        self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
+        nn.init.xavier_uniform_(self.weight)
 
     def forward(self, x):
-        # 1. Chuẩn hóa x và trọng số W lên mặt cầu
-        x_norm = F.normalize(x, p=2, dim=1)
+        # Bước 1: Trích xuất đặc trưng qua MLP
+        z = self.projection(x)
+        
+        # Bước 2: Chuẩn hóa L2 để chiếu lên mặt cầu (Bắt buộc cho không gian Contrastive)
+        z_norm = F.normalize(z, p=2, dim=1)
         w_norm = F.normalize(self.weight, p=2, dim=1)
         
-        # 2. Tính Cosine thay vì tích vô hướng
-        logits = F.linear(x_norm, w_norm) / self.tau
-        return logits
+        # Bước 3: Tính Cosine thay cho Tích vô hướng
+        cosine_sim = F.linear(z_norm, w_norm)
+        
+        # Bước 4: Áp dụng nhiệt độ tau để làm sắc nét (sharpen) không gian
+        logits = cosine_sim / self.tau
+        
+        # Trả về TÍCH HỢP 2 THỨ:
+        # 1. log_probs để tính loss1 (CrossEntropy)
+        # 2. z_norm để tính loss2 (Contrastive Loss với Global Prototypes)
+        return F.log_softmax(logits, dim=1)
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = torchvision.models.resnet50()
+        self.model = torchvision.models.resnet50(pretrained=False)
         num_fts = self.model.fc.in_features
         self.model.fc = nn.Linear(num_fts, 512, bias = False)
 
     def forward(self, pixel_values, **kwargs):
         if pixel_values.shape[1] == 1: pixel_values = pixel_values.repeat((1,3,1,1))
         img_embeds = self.model(pixel_values)
-        img_embeds = img_embeds / img_embeds.norm(dim=-1, keepdim=True)
         return img_embeds
 
 
@@ -39,11 +63,7 @@ class ClientModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.Encoder = MEDCLIPVisionModel()
-        checkpoint_path = '/kaggle/input/models/huynhat15/gogo/pytorch/default/1/client_0_round_0.pth.tar'
-        state_dict = torch.load(checkpoint_path, map_location='cpu')
-
-        # 3. Nạp Dictionary trọng số vào mô hình
-        self.Encoder.load_state_dict(state_dict)
+        self.head = MLP(512, 4)
         print('encode head')
 
     def forward(self, x):
