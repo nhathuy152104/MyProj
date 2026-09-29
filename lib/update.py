@@ -60,43 +60,43 @@ class LocalUpdate(object):
                 images, labels = images.to(self.device), labels_g.to(self.device)
 
                 model.zero_grad()
-                log_probs, protos = model.forward(images)
-                loss1 = self.criterion(log_probs, labels)
+                protos = model.forward(images)
+                # loss1 = self.criterion(log_probs, labels)
                 loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
 
                 loss = loss2
                 loss.backward()
                 optimizer.step()
-                print("loss1: ", loss1.item())
+                # print("loss1: ", loss1.item())
                 print("loss2: ", loss2.item())
 
-                _, y_hat = log_probs.max(1)
-                acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
+                # _, y_hat = log_probs.max(1)
+                # acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
 
-                if self.args.verbose and (batch_idx % 10 == 0):
-                    print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f}'.format(
-                        global_round, idx, iter, batch_idx * len(images),
-                        len(self.trainloader.dataset),
-                        100. * batch_idx / len(self.trainloader),
-                        loss.item(),
-                        acc_val.item()))
-                batch_loss['total'].append(loss.item())
-                batch_loss['1'].append(loss1.item())
-                batch_loss['2'].append(loss2.item())
+                # if self.args.verbose and (batch_idx % 10 == 0):
+                #     print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f}'.format(
+                #         global_round, idx, iter, batch_idx * len(images),
+                #         len(self.trainloader.dataset),
+                #         100. * batch_idx / len(self.trainloader),
+                #         loss.item(),
+                #         acc_val.item()))
+                # batch_loss['total'].append(loss.item())
+                # # batch_loss['1'].append(loss1.item())
+                # batch_loss['2'].append(loss2.item())
             local_weights = copy.deepcopy(model.state_dict())
             save_dir = "./client_weights"   
             os.makedirs(save_dir, exist_ok=True)
             save_path = os.path.join(save_dir, f"client_{idx}_round_{global_round}.pth")
             torch.save(local_weights, save_path)
-            epoch_loss['total'].append(sum(batch_loss['total'])/len(batch_loss['total']))
-            epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
-            epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
+            # epoch_loss['total'].append(sum(batch_loss['total'])/len(batch_loss['total']))
+            # epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
+            # epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
 
             # val_acc, val_loss = self.inference(model, global_protos)
             # print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
-        epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
-        epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
-        epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
+        # epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
+        # epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
+        # epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
 
         return model.state_dict(), epoch_loss, acc_val.item()
 
