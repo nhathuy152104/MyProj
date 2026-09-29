@@ -30,20 +30,7 @@ class MLP(nn.Module):
         # Bước 1: Trích xuất đặc trưng qua MLP
         z = self.projection(x)
         
-        # Bước 2: Chuẩn hóa L2 để chiếu lên mặt cầu (Bắt buộc cho không gian Contrastive)
-        z_norm = F.normalize(z, p=2, dim=1)
-        w_norm = F.normalize(self.weight, p=2, dim=1)
-        
-        # Bước 3: Tính Cosine thay cho Tích vô hướng
-        cosine_sim = F.linear(z_norm, w_norm)
-        
-        # Bước 4: Áp dụng nhiệt độ tau để làm sắc nét (sharpen) không gian
-        logits = cosine_sim / self.tau
-        
-        # Trả về TÍCH HỢP 2 THỨ:
-        # 1. log_probs để tính loss1 (CrossEntropy)
-        # 2. z_norm để tính loss2 (Contrastive Loss với Global Prototypes)
-        return F.log_softmax(logits, dim=1)
+        return F.log_softmax(z, dim=1)
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
