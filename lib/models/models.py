@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class MLPCosineHead(nn.Module):
+class MLP(nn.Module):
     def __init__(self, in_features, num_classes, tau=0.07):
         super().__init__()
         self.tau = tau
