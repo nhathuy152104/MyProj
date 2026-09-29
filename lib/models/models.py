@@ -22,7 +22,7 @@ class MLP(nn.Module):
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = torchvision.models.resnet50(pretrained=False)
+        self.model = torchvision.models.resnet50
         num_fts = self.model.fc.in_features
         self.model.fc = nn.Linear(num_fts, 512, bias = False)
 
@@ -38,7 +38,7 @@ class MEDCLIPVisionModel(nn.Module):
 class ClientModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.Encoder = MEDCLIPVisionModel()
+        self.Encoder = MEDCLIPVisionModel().load_state_dict('/kaggle/input/models/huynhat15/gogo/pytorch/default/1/client_0_round_0.pth.tar')
         self.head = MLP(512, 4)
         print('encode head')
 
