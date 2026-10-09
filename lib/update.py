@@ -35,7 +35,11 @@ class LocalUpdate(object):
             drop_last=True
         )
         self.device = args.device
-        self.criterion = nn.CrossEntropyLoss().to(self.device)
+        counts = torch.tensor([3000.0, 6000.0, 10000.0, 1300.0])
+        weights = 1.0 / torch.sqrt(counts)
+        weights = (weights / weights.sum()) * 4.0
+
+        self.criterion = nn.CrossEntropyLoss(weight=weights.to(self.device))
         self.contrastive_loss = MultiProtoSupConLoss().to(self.device)
         self.testloader = DataLoader(val_dataset, batch_size=32, drop_last=False)
 
