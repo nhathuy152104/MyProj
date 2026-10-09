@@ -165,7 +165,7 @@ class LocalUpdate(object):
             total += len(labels)
 
         accuracy = correct/total
-        return accuracy, loss, loss1.item(), loss2.item()
+        return accuracy, loss/total, loss1.item()/total, loss2.item()/total
 
 class LocalTest(object):
     def __init__(self, args, dataset, idxs):
