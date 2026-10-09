@@ -48,7 +48,7 @@ class LocalUpdate(object):
 
     def update_weights_fedfm(self, idx, global_protos, model, global_round):
         epoch_loss = {'total': [], '1': [], '2': []}    
-        optimizer = torch.optim.Adam(model.parameters(), lr=self.args.lr,
+        optimizer = torch.optim.AdamW(model.parameters(), lr=self.args.lr,
                                          weight_decay=1e-4)
 
         for iter in range(self.args.train_ep):
@@ -59,49 +59,49 @@ class LocalUpdate(object):
                 images, labels = images.to(self.device), labels_g.to(self.device)
 
                 model.zero_grad()
-                protos = model.forward(images)
-                # loss1 = self.criterion(log_probs, labels)
+                log_probs, protos = model.forward(images)
+                loss1 = self.criterion(log_probs, labels)
                 loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
 
-                loss = loss2
+                loss = loss1 + loss2
                 loss.backward()
                 optimizer.step()
-                # print("loss1: ", loss1.item())
+                print("loss1: ", loss1.item())
                 print("loss2: ", loss2.item())
 
-            #     _, y_hat = log_probs.max(1)
-            #     acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
+                _, y_hat = log_probs.max(1)
+                acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
 
-            # #     if self.args.verbose and (batch_idx % 10 == 0):
-            #         print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f}'.format(
-            #             global_round, idx, iter, batch_idx * len(images),
-            #             len(self.trainloader.dataset),
-            #             100. * batch_idx / len(self.trainloader),
-            #             loss.item(),
-            #             acc_val.item()))
-            #     batch_loss['total'].append(loss.item())
-            #     batch_loss['1'].append(loss1.item())
-            #     batch_loss['2'].append(loss2.item())
-            # epoch_loss['total'].append(sum(batch_loss['total'])/len(batch_loss['total']))
-            # epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
-            # epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
-            local_weights = copy.deepcopy(model.state_dict())
+                if self.args.verbose and (batch_idx % 10 == 0):
+                    print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f}'.format(
+                        global_round, idx, iter, batch_idx * len(images),
+                        len(self.trainloader.dataset),
+                        100. * batch_idx / len(self.trainloader),
+                        loss.item(),
+                        acc_val.item()))
+                batch_loss['total'].append(loss.item())
+                batch_loss['1'].append(loss1.item())
+                batch_loss['2'].append(loss2.item())
+            epoch_loss['total'].append(sum(batch_loss['total'])/len(batch_loss['total']))
+            epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
+            epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
+            # local_weights = copy.deepcopy(model.state_dict())
 
         # 2. Tạo thư mục lưu trữ (bạn có thể đổi tên 'client_weights' theo ý muốn)
         # Nên dùng tham số self.args.save_dir nếu có, hoặc tạo một thư mục cứng
-            save_dir = "./client_weights"
-            os.makedirs(save_dir, exist_ok=True)
+            # save_dir = "./client_weights"
+            # os.makedirs(save_dir, exist_ok=True)
 
-            # 3. Đặt tên file theo chuẩn: client_ID_round_X.pth
-            save_path = os.path.join(save_dir, f"client_{idx}_round_{global_round}.pth")
+            # # 3. Đặt tên file theo chuẩn: client_ID_round_X.pth
+            # save_path = os.path.join(save_dir, f"client_{idx}_round_{global_round}.pth")
             
-            # 4. Lưu xuống ổ cứng
-            torch.save(local_weights, save_path)
-        #     val_acc, val_loss = self.inference(model, global_protos)
-        #     print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
-        # epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
-        # epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
-        # epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
+            # # 4. Lưu xuống ổ cứng
+            # torch.save(local_weights, save_path)
+            val_acc, val_loss = self.inference(model, global_protos)
+            print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+        epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
+        epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
+        epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
 
         return model.state_dict(), epoch_loss, acc_val.item()
 
