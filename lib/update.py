@@ -143,29 +143,39 @@ class LocalUpdate(object):
                 
                 
     def inference(self, model, global_protos):
-        """ Returns the inference accuracy and loss.
+        """ Returns the true inference accuracy and correct average losses.
         """
-
         model.eval()
-        loss, total, correct = 0.0, 0.0, 0.0
+        total_loss, total_loss1, total_loss2 = 0.0, 0.0, 0.0
+        total, correct = 0.0, 0.0
 
-        for batch_idx, (images, labels) in enumerate(self.testloader):
-            images, labels = images.to(self.device), labels.to(self.device)
+        # 1. Tắt tính toán gradient khi test
+        with torch.no_grad():
+            for images, labels in self.testloader:
+                images, labels = images.to(self.device), labels.to(self.device)
+                batch_sz = labels.size(0)
 
-            # Inference
-            log_probs, protos = model.forward(images)
-            loss1 = self.criterion(log_probs, labels)
-            loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
-            loss += loss1.item() + loss2.item()
+                # Inference
+                log_probs, protos = model.forward(images)
+                l1 = self.criterion(log_probs, labels)
+                l2 = self.contrastive_loss.forward(protos, labels, global_protos)
+                
+                # 2. Nhân lại với batch_sz để lấy tổng loss tích lũy chuẩn
+                total_loss1 += l1.item() * batch_sz
+                total_loss2 += l2.item() * batch_sz
+                total_loss += (l1.item() + l2.item()) * batch_sz
 
-            # Prediction
-            _, pred_labels = torch.max(log_probs, 1)
-            pred_labels = pred_labels.view(-1)
-            correct += torch.sum(torch.eq(pred_labels, labels)).item()
-            total += len(labels)
+                # Prediction
+                _, pred_labels = torch.max(log_probs, 1)
+                correct += torch.sum(torch.eq(pred_labels.view(-1), labels.view(-1))).item()
+                total += batch_sz
 
-        accuracy = correct/total
-        return accuracy, loss/total, loss1.item()/total, loss2.item()/total
+        accuracy = correct / total
+        avg_loss = total_loss / total
+        avg_loss1 = total_loss1 / total
+        avg_loss2 = total_loss2 / total
+
+        return accuracy, avg_loss, avg_loss1, avg_loss2
 
 class LocalTest(object):
     def __init__(self, args, dataset, idxs):
