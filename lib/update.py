@@ -76,9 +76,12 @@ class LocalUpdate(object):
 
     def update_weights_fedfm(self, idx, global_protos, model, global_round):
         epoch_loss = {'total': [], '1': [], '2': []}    
-        optimizer = torch.optim.AdamW(model.parameters(), lr=self.args.lr,
-                                         weight_decay=1e-4)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=self.args.lr, weight_decay=1e-4)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args.train_ep, eta_min=1e-5)
+        
+        # Danh sách tên các nhãn theo đúng thứ tự index
+        categories = ["COVID", "Lung_Op", "Normal", "Viral_Pneu"]
+
         for iter in range(self.args.train_ep):
             model.train()
 
@@ -107,49 +110,53 @@ class LocalUpdate(object):
                             100. * batch_idx / len(self.trainloader),
                             loss.item(),
                             acc_val.item(), 
-                            loss1.item(),    # Đã đưa vào trong format()
-                            loss2.item()     # Đã đưa vào trong format()
+                            loss1.item(),
+                            loss2.item()
                         )
                     )
                 batch_loss['total'].append(loss.item())
                 batch_loss['1'].append(loss1.item())
                 batch_loss['2'].append(loss2.item())
+
             epoch_loss['total'].append(sum(batch_loss['total'])/len(batch_loss['total']))
             epoch_loss['1'].append(sum(batch_loss['1']) / len(batch_loss['1']))
             epoch_loss['2'].append(sum(batch_loss['2']) / len(batch_loss['2']))
-            # local_weights = copy.deepcopy(model.state_dict())
 
-        # 2. Tạo thư mục lưu trữ (bạn có thể đổi tên 'client_weights' theo ý muốn)
-        # Nên dùng tham số self.args.save_dir nếu có, hoặc tạo một thư mục cứng
-            # save_dir = "./client_weights"
-            # os.makedirs(save_dir, exist_ok=True)
-
-            # # 3. Đặt tên file theo chuẩn: client_ID_round_X.pth
-            # save_path = os.path.join(save_dir, f"client_{idx}_round_{global_round}.pth")
-            
-            # # 4. Lưu xuống ổ cứng
-            # torch.save(local_weights, save_path)
             scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']
             print("lr: ", current_lr)
-            val_acc, val_loss, val_loss1, val_loss2 = self.inference(model, global_protos)
-            print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f} | Val Loss1: {val_loss1:.4f} | Val Loss2: {val_loss2:.4f}")
+
+            # Đánh giá và in chi tiết từng class
+            val_acc, val_loss, val_loss1, val_loss2, per_class_acc = self.inference(model, global_protos)
+            
+            # Format chuỗi hiển thị theo từng nhãn
+            class_acc_str = " | ".join([f"{cat}: {acc*100:.2f}%" for cat, acc in zip(categories, per_class_acc)])
+            balanced_acc = per_class_acc.mean() * 100
+
+            print(f"Val Loss: {val_loss:.4f} | Overall Acc: {val_acc*100:.2f}% (Loss1: {val_loss1:.4f} | Loss2: {val_loss2:.4f})")
+            print(f"   -> Balanced Acc: {balanced_acc:.2f}%")
+            print(f"   -> Per-class: [{class_acc_str}]")
+
         epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
         epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
         epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
 
         return model.state_dict(), epoch_loss, acc_val.item()
-
-                
                 
     def inference(self, model, global_protos):
-        """ Returns the true inference accuracy and correct average losses.
+        """ Returns the true inference overall accuracy, average losses,
+            and per-class accuracy.
         """
         model.eval()
         total_loss, total_loss1, total_loss2 = 0.0, 0.0, 0.0
         total, correct = 0.0, 0.0
 
-        # 1. Tắt tính toán gradient khi test
+        # Giả sử có 4 classes: 0: COVID, 1: Lung_Opacity, 2: Normal, 3: Viral Pneumonia
+        num_classes = 4
+        class_correct = torch.zeros(num_classes, device=self.device)
+        class_total = torch.zeros(num_classes, device=self.device)
+
+        # Tắt gradient khi kiểm thử để tiết kiệm VRAM và tăng tốc
         with torch.no_grad():
             for images, labels in self.testloader:
                 images, labels = images.to(self.device), labels.to(self.device)
@@ -160,22 +167,35 @@ class LocalUpdate(object):
                 l1 = self.criterion(log_probs, labels)
                 l2 = self.contrastive_loss.forward(protos, labels, global_protos)
                 
-                # 2. Nhân lại với batch_sz để lấy tổng loss tích lũy chuẩn
+                # Nhân lại với batch_sz để tính đúng tổng loss tích lũy
                 total_loss1 += l1.item() * batch_sz
                 total_loss2 += l2.item() * batch_sz
                 total_loss += (l1.item() + l2.item()) * batch_sz
 
                 # Prediction
                 _, pred_labels = torch.max(log_probs, 1)
-                correct += torch.sum(torch.eq(pred_labels.view(-1), labels.view(-1))).item()
+                pred_labels = pred_labels.view(-1)
+                labels = labels.view(-1)
+
+                correct_mask = torch.eq(pred_labels, labels)
+                correct += torch.sum(correct_mask).item()
                 total += batch_sz
 
-        accuracy = correct / total
+                # Đếm số lượng mẫu đúng và tổng số mẫu theo từng class
+                for c in range(num_classes):
+                    c_mask = (labels == c)
+                    class_total[c] += torch.sum(c_mask).item()
+                    class_correct[c] += torch.sum(correct_mask & c_mask).item()
+
+        overall_acc = correct / total
         avg_loss = total_loss / total
         avg_loss1 = total_loss1 / total
         avg_loss2 = total_loss2 / total
 
-        return accuracy, avg_loss, avg_loss1, avg_loss2
+        # Tính Accuracy cho từng lớp (tránh chia cho 0 nếu class_total = 0)
+        per_class_acc = (class_correct / torch.clamp(class_total, min=1.0)).cpu().numpy()
+
+        return overall_acc, avg_loss, avg_loss1, avg_loss2, per_class_acc
 
 class LocalTest(object):
     def __init__(self, args, dataset, idxs):
