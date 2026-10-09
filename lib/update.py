@@ -28,7 +28,7 @@ class DatasetSplit(Dataset):
 class LocalUpdate(object):
     def __init__(self, args, dataset, val_dataset, idxs):
         self.args = args
-        trainloader = DataLoader(
+        self.trainloader = DataLoader(
             dataset, 
             batch_size=self.args.local_bs, 
             shuffle=True,       # Đảm bảo các batch trộn đều cả 4 class
