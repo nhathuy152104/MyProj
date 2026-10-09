@@ -78,7 +78,7 @@ class LocalUpdate(object):
         epoch_loss = {'total': [], '1': [], '2': []}    
         optimizer = torch.optim.AdamW(model.parameters(), lr=self.args.lr,
                                          weight_decay=1e-4)
-
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args.train_ep, eta_min=1e-6)
         for iter in range(self.args.train_ep):
             model.train()
 
@@ -94,18 +94,16 @@ class LocalUpdate(object):
                 loss = loss1 + loss2
                 loss.backward()
                 optimizer.step()
-                print("loss1: ", loss1.item())
-                print("loss2: ", loss2.item())
                 _, y_hat = log_probs.max(1)
                 acc_val = torch.eq(y_hat, labels.squeeze()).float().mean()
 
                 if self.args.verbose and (batch_idx % 10 == 0):
-                    print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f}'.format(
+                    print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f} \tLoss1: {:.3f} | Loss2: {:.3f}'.format(
                         global_round, idx, iter, batch_idx * len(images),
                         len(self.trainloader.dataset),
                         100. * batch_idx / len(self.trainloader),
                         loss.item(),
-                        acc_val.item()))
+                        acc_val.item()), loss1.item(), loss2.item())
                 batch_loss['total'].append(loss.item())
                 batch_loss['1'].append(loss1.item())
                 batch_loss['2'].append(loss2.item())
@@ -124,8 +122,11 @@ class LocalUpdate(object):
             
             # # 4. Lưu xuống ổ cứng
             # torch.save(local_weights, save_path)
-            val_acc, val_loss = self.inference(model, global_protos)
-            print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+            scheduler.step()
+            current_lr = optimizer.param_groups[0]['lr']
+            print("lr: ", current_lr)
+            val_acc, val_loss, val_loss1, val_loss2 = self.inference(model, global_protos)
+            print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f} | Val Loss1: {val_loss1:.4f} | Val Loss2: {val_loss2:.4f}")
         epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
         epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
         epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
