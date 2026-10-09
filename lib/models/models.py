@@ -9,26 +9,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class MLP(nn.Module):
-    def __init__(self, in_features, num_classes, tau=0.07):
+    def __init__(self, in_features, num_classes, hidden_dim=512, tau=0.07):
         super().__init__()
         self.tau = tau
-        
-        # 1. Khối Projection (Nén và tạo phi tuyến tính)
-        # Bắt buộc phải gom vào Sequential để code sạch sẽ
+
         self.projection = nn.Sequential(
-            nn.ReLU(),
-            nn.Dropout(p=0.5),      # Dropout nên để trước hoặc sau ReLU
-            nn.Linear(in_features, num_classes), # Bạn có thể đổi output thành hidden_dim (vd: 128)
+            nn.Linear(in_features, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5),     
+            nn.Linear(hidden_dim, num_classes) # Khắc phục lỗi num_classes//2
         )
         
-        # 2. Khối Phân loại Cosine (Thay thế hoàn toàn nn.Linear cuối)
-        # Khởi tạo trọng số W như các "Mỏ neo ảo
-
     def forward(self, x):
-        # Bước 1: Trích xuất đặc trưng qua MLP
         z = self.projection(x)
-        
-        return F.log_softmax(z, dim=1)
+        # Sử dụng temperature scaling (tau) để kiểm soát độ tự tin của phân phối xác suất
+        return F.log_softmax(z / self.tau, dim=1)
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
