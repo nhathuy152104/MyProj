@@ -7,23 +7,24 @@ import torch
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-class NormalizedCosineHead(nn.Module):
-    def __init__(self, in_features, num_classes, tau=0.15): # Nâng tau lên 0.15 để tránh overfitting nhãn đa số
+
+class MLP(nn.Module):
+    def __init__(self, in_features, num_classes, hidden_dim=512, tau=0.07):
         super().__init__()
         self.tau = tau
-        # Trọng số đóng vai trò như các tâm lớp (class centers)
-        self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
-        nn.init.xavier_uniform_(self.weight)
 
+        self.projection = nn.Sequential(
+            nn.Linear(in_features, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.3),     
+            nn.Linear(hidden_dim, num_classes) # Khắc phục lỗi num_classes//2
+        )
+        
     def forward(self, x):
-        # 1. Chuẩn hóa L2 đặc trưng đầu vào
-        x_norm = F.normalize(x, p=2, dim=1)
-        # 2. Chuẩn hóa L2 trọng số tâm lớp
-        w_norm = F.normalize(self.weight, p=2, dim=1)
-        # 3. Tính Cosine Similarity
-        cosine_sim = F.linear(x_norm, w_norm)
-        # 4. Scale bằng nhiệt độ tau
-        return cosine_sim / self.tau
+        z = self.projection(x)
+        # Sử dụng temperature scaling (tau) để kiểm soát độ tự tin của phân phối xác suất
+        return z
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -43,7 +44,7 @@ class ClientModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.Encoder = MEDCLIPVisionModel()
-        self.head = NormalizedCosineHead(768, 4)
+        self.head = MLP(768, 4)
         print('encode head')
 
     def forward(self, x):
