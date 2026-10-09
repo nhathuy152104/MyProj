@@ -155,7 +155,7 @@ class LocalUpdate(object):
             # Inference
             log_probs, protos = model.forward(images)
             loss1 = self.criterion(log_probs, labels)
-            loss2 = 1/3 * self.contrastive_loss.forward(protos, labels, global_protos)
+            loss2 = self.contrastive_loss.forward(protos, labels, global_protos)
             loss += loss1.item() + loss2.item()
 
             # Prediction
