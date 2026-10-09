@@ -43,7 +43,7 @@ class ClientModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.Encoder = MEDCLIPVisionModel()
-        self.head = MLP(768, 4)
+        self.head = NormalizedCosineHead(768, 4)
         print('encode head')
 
     def forward(self, x):
