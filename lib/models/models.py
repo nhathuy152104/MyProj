@@ -17,14 +17,14 @@ class MLP(nn.Module):
             nn.Linear(in_features, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),     
+            nn.Dropout(p=0.3),     
             nn.Linear(hidden_dim, num_classes) # Khắc phục lỗi num_classes//2
         )
         
     def forward(self, x):
         z = self.projection(x)
         # Sử dụng temperature scaling (tau) để kiểm soát độ tự tin của phân phối xác suất
-        return F.log_softmax(z / self.tau, dim=1)
+        return z
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
