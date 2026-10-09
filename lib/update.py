@@ -28,7 +28,12 @@ class DatasetSplit(Dataset):
 class LocalUpdate(object):
     def __init__(self, args, dataset, val_dataset, idxs):
         self.args = args
-        self.trainloader = DataLoader(dataset, batch_size= self.args.local_bs, drop_last= True)
+        trainloader = DataLoader(
+            dataset, 
+            batch_size=self.args.local_bs, 
+            shuffle=True,       # Đảm bảo các batch trộn đều cả 4 class
+            drop_last=True
+        )
         self.device = args.device
         self.criterion = nn.CrossEntropyLoss().to(self.device)
         self.contrastive_loss = MultiProtoSupConLoss().to(self.device)
