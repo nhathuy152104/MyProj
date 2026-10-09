@@ -4,7 +4,7 @@
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset,WeightedRandomSampler,Subset
 import copy
 import numpy as np
 from .losses import MultiProtoSupConLoss
@@ -30,7 +30,7 @@ class LocalUpdate(object):
         self.args = args
         self.trainloader = self.train_val_test(dataset, list(idxs))
         self.device = args.device
-        self.criterion = nn.NLLLoss().to(self.device)
+        self.criterion = nn.CrossEntropyLoss().to(self.device)
         self.contrastive_loss = MultiProtoSupConLoss().to(self.device)
         self.testloader = DataLoader(val_dataset, batch_size=32, drop_last=True)
 
@@ -39,11 +39,39 @@ class LocalUpdate(object):
         Returns train, validation and test dataloaders for a given dataset
         and user indexes.
         """
-        idxs_train = idxs[:int(1 * len(idxs))]
-        trainloader = DataLoader(dataset, batch_size=self.args.local_bs, shuffle=True, drop_last=True)
+        idxs_train = idxs[:int(1.0 * len(idxs))]
+        
+        # Tạo tập dataset con (Subset) cho riêng client này
+        train_dataset = Subset(dataset, idxs_train)
+
+        # 1. Trích xuất nhãn (targets) của riêng phần dữ liệu thuộc Client này
+        # dataset.targets là một tensor chứa toàn bộ nhãn, ta dùng idxs_train để slice
+        train_targets = dataset.targets[idxs_train].numpy()
+
+        # 2. Đếm số lượng ảnh của từng class (Giả sử có 4 class từ 0 đến 3)
+        class_counts = np.bincount(train_targets, minlength=4)
+        
+        # 3. Tính trọng số cho từng class (nghịch đảo của số lượng). 
+        # Nếu số lượng = 0 thì gán trọng số = 0 để tránh lỗi chia cho 0
+        class_weights = np.where(class_counts > 0, 1.0 / class_counts, 0.0)
+        
+        # 4. Gán trọng số tương ứng cho từng ảnh (sample)
+        samples_weight = class_weights[train_targets]
+        samples_weight = torch.from_numpy(samples_weight).double()
+
+        # 5. Khởi tạo Sampler
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+
+        # 6. Truyền sampler vào DataLoader
+        # QUAN TRỌNG: Khi dùng sampler, BẮT BUỘC phải bỏ tham số shuffle=True
+        trainloader = DataLoader(
+            train_dataset, 
+            batch_size=self.args.local_bs, 
+            sampler=sampler, 
+            drop_last=True # Có thể giữ lại drop_last nếu muốn batch size luôn cố định
+        )
 
         return trainloader
-
 
 
     def update_weights_fedfm(self, idx, global_protos, model, global_round):
