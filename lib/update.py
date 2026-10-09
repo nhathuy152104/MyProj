@@ -99,11 +99,18 @@ class LocalUpdate(object):
 
                 if self.args.verbose and (batch_idx % 10 == 0):
                     print('| Global Round : {} | User: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.3f} | Acc: {:.3f} \tLoss1: {:.3f} | Loss2: {:.3f}'.format(
-                        global_round, idx, iter, batch_idx * len(images),
-                        len(self.trainloader.dataset),
-                        100. * batch_idx / len(self.trainloader),
-                        loss.item(),
-                        acc_val.item()), loss1.item(), loss2.item())
+                            global_round, 
+                            idx, 
+                            iter, 
+                            batch_idx * len(images),
+                            len(self.trainloader.dataset),
+                            100. * batch_idx / len(self.trainloader),
+                            loss.item(),
+                            acc_val.item(), 
+                            loss1.item(),    # Đã đưa vào trong format()
+                            loss2.item()     # Đã đưa vào trong format()
+                        )
+                    )
                 batch_loss['total'].append(loss.item())
                 batch_loss['1'].append(loss1.item())
                 batch_loss['2'].append(loss2.item())
