@@ -34,12 +34,11 @@ class MEDCLIPVisionModel(nn.Module):
         super().__init__()
         self.model = torchvision.models.resnet50(pretrained=False)
         num_fts = self.model.fc.in_features
-        self.model.fc = nn.Linear(num_fts, 512, bias = False)
+        self.model.fc = nn.Linear(num_fts, 768, bias = False)
 
     def forward(self, pixel_values, **kwargs):
         if pixel_values.shape[1] == 1: pixel_values = pixel_values.repeat((1,3,1,1))
         img_embeds = self.model(pixel_values)
-        img_embeds = img_embeds / img_embeds.norm(dim=-1, keepdim=True)
         return img_embeds
 
 
@@ -49,7 +48,7 @@ class ClientModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.Encoder = MEDCLIPVisionModel()
-        self.head = MLP(512, 4)
+        self.head = MLP(768, 4)
         print('encode head')
 
     def forward(self, x):
