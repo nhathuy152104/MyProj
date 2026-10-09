@@ -21,6 +21,11 @@ trans_covid19_train = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[constants.IMG_MEAN],std=[constants.IMG_STD])],
             )
+trans_covid19_val = transforms.Compose([
+    transforms.Resize((constants.IMG_SIZE, constants.IMG_SIZE)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[constants.IMG_MEAN], std=[constants.IMG_STD])
+])
 def get_dataset(args, n_list, k_list):
     """ Returns train and test datasets and a user group which is a dict where
     the keys are the user index and the values are the corresponding data for
@@ -41,7 +46,7 @@ def get_dataset(args, n_list, k_list):
 
         # Đã SỬA: Thay datasets.MNIST bằng covid19.COVID19 (gọi từ file covid19.py của bạn)
         train_dataset = covid19.COVID19(args, data_dir, train=True, transform=apply_transform)
-        val_dataset = covid19.COVID19(args, data_dir, train=False, transform=apply_transform)
+        val_dataset = covid19.COVID19(args, data_dir, train=False, transform=trans_covid19_val)
         # sample training data amongst users
         user_groups = covid19_iid(train_dataset, args.num_users)
 

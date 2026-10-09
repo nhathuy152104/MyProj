@@ -32,7 +32,7 @@ class LocalUpdate(object):
         self.device = args.device
         self.criterion = nn.CrossEntropyLoss().to(self.device)
         self.contrastive_loss = MultiProtoSupConLoss().to(self.device)
-        self.testloader = DataLoader(val_dataset, batch_size=32, drop_last=True)
+        self.testloader = DataLoader(val_dataset, batch_size=32, drop_last=False)
 
     def train_val_test(self, dataset, idxs):
         """
@@ -78,7 +78,7 @@ class LocalUpdate(object):
         epoch_loss = {'total': [], '1': [], '2': []}    
         optimizer = torch.optim.AdamW(model.parameters(), lr=self.args.lr,
                                          weight_decay=1e-4)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args.train_ep, eta_min=1e-6)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args.train_ep, eta_min=1e-5)
         for iter in range(self.args.train_ep):
             model.train()
 
