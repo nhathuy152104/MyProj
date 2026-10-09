@@ -15,11 +15,11 @@ def args_parser():
                         help="number of users: K")
     parser.add_argument('--frac', type=float, default=0.04,
                         help='the fraction of clients: C')
-    parser.add_argument('--train_ep', type=int, default=100,
+    parser.add_argument('--train_ep', type=int, default=30,
                         help="the number of local episodes: E")
     parser.add_argument('--local_bs', type=int, default=128,
                         help="local batch size: B")
-    parser.add_argument('--lr', type=float, default=0.0004,
+    parser.add_argument('--lr', type=float, default=0.0001,
                         help='learning rate')
     parser.add_argument('--momentum', type=float, default=0.5,
                         help='SGD momentum (default: 0.5)')
