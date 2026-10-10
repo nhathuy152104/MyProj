@@ -90,7 +90,7 @@ class LocalUpdate(object):
         
         # Danh sách tên các nhãn theo đúng thứ tự index
         categories = ["COVID", "Lung_Op", "Normal", "Viral_Pneu"]
-
+        best_balanced_acc = 0.0
         for iter in range(self.args.train_ep):
             model.train()
 
