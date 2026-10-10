@@ -11,7 +11,7 @@ def args_parser():
     # federated arguments (Notation for the arguments followed from paper)
     parser.add_argument('--rounds', type=int, default=100,
                         help="number of rounds of training")
-    parser.add_argument('--num_users', type=int, default=20,
+    parser.add_argument('--num_users', type=int, default=2,
                         help="number of users: K")
     parser.add_argument('--frac', type=float, default=0.04,
                         help='the fraction of clients: C')
@@ -19,7 +19,7 @@ def args_parser():
                         help="the number of local episodes: E")
     parser.add_argument('--local_bs', type=int, default=128,
                         help="local batch size: B")
-    parser.add_argument('--lr', type=float, default=0.0001,
+    parser.add_argument('--lr', type=float, default=0.0003,
                         help='learning rate')
     parser.add_argument('--momentum', type=float, default=0.5,
                         help='SGD momentum (default: 0.5)')

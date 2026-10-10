@@ -101,9 +101,9 @@ class LocalUpdate(object):
                 model.zero_grad()
                 log_probs, protos = model.forward(images)
                 loss1 = self.criterion(log_probs, labels)
-                loss2 = 0.2 * self.contrastive_loss.forward(protos, labels, global_protos)
+                loss2 = 0.3 * self.contrastive_loss.forward(protos, labels, global_protos)
 
-                loss = loss1
+                loss = loss1 + loss2
                 loss.backward()
                 optimizer.step()
                 _, y_hat = log_probs.max(1)
@@ -146,10 +146,31 @@ class LocalUpdate(object):
             print(f"   -> Balanced Acc: {balanced_acc:.2f}%")
             print(f"   -> Per-class: [{class_acc_str}]")
 
+            # 2. LOGIC LƯU BEST MODEL DỰA TRÊN BALANCED ACCURACY
+            if balanced_acc > best_balanced_acc:
+                best_balanced_acc = balanced_acc
+                # Lưu vào RAM để gửi lên Server
+                best_model_weights = copy.deepcopy(model.state_dict())
+                
+                # Lưu ra ổ cứng để backup
+                import os
+                os.makedirs("local_checkpoints", exist_ok=True)
+                save_path = f"local_checkpoints/client_{idx}_best_round_{global_round}.pth"
+                torch.save(best_model_weights, save_path)
+                print(f"   *** [NEW BEST] Đã lưu model đạt Balanced Acc: {best_balanced_acc:.2f}% tại {save_path} ***")
+
+        # Tính trung bình loss của cả round
+
         epoch_loss['total'] = sum(epoch_loss['total']) / len(epoch_loss['total'])
         epoch_loss['1'] = sum(epoch_loss['1']) / len(epoch_loss['1'])
         epoch_loss['2'] = sum(epoch_loss['2']) / len(epoch_loss['2'])
-
+        import os
+        os.makedirs("local_checkpoints", exist_ok=True) # Tạo thư mục lưu trữ nếu chưa có
+        save_path = f"local_checkpoints/client_{idx}_round_{global_round}.pth"
+        
+        torch.save(model.state_dict(), save_path)
+        print(f"[SAVE] Đã lưu trọng số cục bộ tại: {save_path}")
+        # -----------------------------------
         return model.state_dict(), epoch_loss, acc_val.item()
                 
     def inference(self, model, global_protos):
