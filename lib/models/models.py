@@ -28,7 +28,7 @@ class NormalizedCosineHead(nn.Module):
 class MEDCLIPVisionModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = torchvision.models.resnet18(pretrained=False)
+        self.model = torchvision.models.resnet50(pretrained=False)
         num_fts = self.model.fc.in_features
         self.model.fc = nn.Linear(num_fts, 768, bias = False)
 
