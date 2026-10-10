@@ -35,7 +35,7 @@ class LocalUpdate(object):
             drop_last=True
         )
         self.device = args.device
-        counts = torch.tensor([3000.0, 6000.0, 10000.0, 1300.0])
+        counts = torch.tensor([3600.0, 6000.0, 10000.0, 1300.0])
         weights = 1.0 / torch.sqrt(counts)
         weights = (weights / weights.sum()) * 4.0
 
@@ -103,7 +103,7 @@ class LocalUpdate(object):
                 loss1 = self.criterion(log_probs, labels)
                 loss2 = 0.3 * self.contrastive_loss.forward(protos, labels, global_protos)
 
-                loss = loss1 + loss2
+                loss = loss1
                 loss.backward()
                 optimizer.step()
                 _, y_hat = log_probs.max(1)
