@@ -11,7 +11,7 @@ def args_parser():
     # federated arguments (Notation for the arguments followed from paper)
     parser.add_argument('--rounds', type=int, default=100,
                         help="number of rounds of training")
-    parser.add_argument('--num_users', type=int, default=2,
+    parser.add_argument('--num_users', type=int, default=1,
                         help="number of users: K")
     parser.add_argument('--frac', type=float, default=0.04,
                         help='the fraction of clients: C')
